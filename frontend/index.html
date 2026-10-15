@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Electronic Voting System</title>
+  
+  <!-- Ethers.js v6 CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+  <style>
+    /* ========================================================
+       DESIGN SYSTEM & STYLING
+       ======================================================== */
+    :root {
+      --eci-navy: #0e2b5c;
+      --eci-navy-dark: #081a38;
+      --eci-blue: #1a56b2;
+      --saffron: #ff9933;
+      --india-green: #138808;
+      --light-bg: #f4f6fa;
+      --surface: #ffffff;
+      --border: #d7dfe9;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --evm-blue-btn: #2563eb;
+      --evm-led-red: #ef4444;
+      --evm-led-green: #22c55e;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--light-bg);
+      color: var(--text-dark);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Tricolor Top Bar */
+    .tricolor-bar {
+      height: 4px;
+      width: 100%;
+      background: linear-gradient(90deg, var(--saffron) 33.33%, #ffffff 33.33%, #ffffff 66.66%, var(--india-green) 66.66%);
+    }
+
+    /* Accessibility & Language Header */
+    .utility-header {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.82rem;
+      padding: 5px 1rem;
+    }
+
+    .utility-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .lang-select {
+      padding: 3px 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    /* Brand Header */
+    .gov-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .eci-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .ashoka-emblem {
+      height: 60px;
+      width: auto;
+    }
+
+    .eci-titles h1 {
+      font-size: 1.25rem;
+      color: var(--eci-navy);
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .eci-titles p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Main Navigation */
+    .main-nav {
+      background: var(--eci-navy);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      overflow-x: auto;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      padding: 0.85rem 1rem;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, color 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .nav-btn:hover {
+      background: var(--eci-navy-dark);
+      color: var(--saffron);
+    }
+
+    .nav-btn.active {
+      background: var(--eci-navy-dark);
+      border-bottom: 3px solid var(--saffron);
+      color: var(--saffron);
+    }
+
+    .nav-btn.terminal-highlight {
+      background: var(--india-green);
+      color: #fff;
+      font-weight: 700;
+      border-radius: 4px;
+      margin: 6px 0;
+      padding: 0.4rem 0.85rem;
+    }
+
+    .nav-btn.terminal-highlight:hover {
+      background: #0f6a06;
+      color: #fff;
+    }
+
+    .auth-btn-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-login-nav {
+      background: var(--saffron);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-login-nav:hover { opacity: 0.9; }
+
+    .btn-logout-nav {
+      background: #ef4444;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Container */
+    .content-area {
+      max-width: 1200px;
+      width: 100%;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      flex: 1;
+    }
+
+    .view-panel { display: none; }
+    .view-panel.active { display: block; }
+
+    /* HERO BANNER */
+    .hero-banner {
+      background: linear-gradient(135deg, #0e2b5c 0%, #1a56b2 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(14, 43, 92, 0.15);
+    }
+
+    .hero-banner::after {
+      content: "🗳️";
+      position: absolute;
+      right: 2rem;
+      bottom: -1rem;
+      font-size: 8rem;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .hero-banner h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    .hero-banner p {
+      max-width: 680px;
+      font-size: 1rem;
+      color: #e2e8f0;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-hero-primary {
+      background: var(--saffron);
+      color: #000;
+      font-weight: 800;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .btn-hero-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    /* SECTION TITLES & CARDS */
+    .section-title {
+      font-size: 1.4rem;
+      color: var(--eci-navy);
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-left: 4px solid var(--saffron);
+      padding-left: 10px;
+    }
+
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    /* Important Dates Table */
+    .table-responsive {
+      overflow-x: auto;
+      margin-bottom: 2rem;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .eci-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .eci-table th {
+      background: #f1f5f9;
+      color: var(--eci-navy);
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .eci-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge-phase {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    /* Candidate Search & Filter */
+    .filter-bar {
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: #fff;
+      min-width: 240px;
+      margin-top: 4px;
+    }
+
+    .candidate-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .candidate-profile-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .candidate-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .party-avatar {
+      font-size: 2rem;
+      width: 52px;
+      height: 52px;
+      background: #f8fafc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+    }
+
+    /* How It Works Steps */
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .step-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      background: var(--eci-navy);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .step-box h4 {
+      font-size: 1rem;
+      color: var(--eci-navy);
+      margin-bottom: 6px;
+    }
+
+    .step-box p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* LOGIN MODAL / PANEL */
+    .login-container {
+      max-width: 480px;
+      margin: 2rem auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .login-header-strip {
+      background: var(--eci-navy);
+      color: #fff;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .login-body { padding: 1.5rem; }
+    .form-group { margin-bottom: 1.2rem; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 4px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--eci-navy);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .btn-submit:hover { background: var(--eci-blue); }
+
+    /* EVM & DIGITAL RECEIPT STAGE (POST LOGIN) */
+    .evm-receipt-stage {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .evm-receipt-stage { grid-template-columns: 1fr; }
+    }
+
+    .ballot-unit {
+      background: #f1f5f9;
+      border: 3px solid #94a3b8;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .unit-header {
+      background: var(--eci-navy);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .status-bulb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .led-bulb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--evm-led-green);
+      box-shadow: 0 0 8px var(--evm-led-green);
+    }
+
+    .ballot-table {
+      width: 100%;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .ballot-row {
+      border-bottom: 2px solid #cbd5e1;
+      display: grid;
+      grid-template-columns: 48px 1fr 68px 50px 84px;
+      align-items: center;
+      padding: 8px 10px;
+    }
+
+    .col-serial {
+      font-weight: 800;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+
+    .col-name-party h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .col-name-party p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .col-symbol {
+      text-align: center;
+      font-size: 1.6rem;
+    }
+
+    .vote-led {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #94a3b8;
+      display: inline-block;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    .vote-led.glow-red {
+      background: var(--evm-led-red);
+      box-shadow: 0 0 10px var(--evm-led-red);
+    }
+
+    .evm-btn {
+      background: var(--evm-blue-btn);
+      border: 2px solid #1e40af;
+      box-shadow: 0 3px 0 #1e3a8a;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 8px 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .evm-btn:disabled {
+      background: #94a3b8;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* DIGITAL RECEIPT UNIT */
+    .receipt-unit {
+      background: #e2e8f0;
+      border: 3px solid #64748b;
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .receipt-window-frame {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 12px;
+      border: 4px solid #0f172a;
+      height: 290px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .receipt-slip {
+      background: #ffffff;
+      width: 90%;
+      border: 1px dashed #64748b;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.78rem;
+      transform: translateY(-220px);
+      opacity: 0;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+    }
+
+    .receipt-slip.printed {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .receipt-slip-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dotted #ccc;
+      padding: 3px 0;
+    }
+
+    .receipt-timer {
+      font-size: 0.75rem;
+      color: #b45309;
+      font-weight: 700;
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    /* Footer */
+    .eci-footer {
+      background: var(--eci-navy-dark);
+      color: #94a3b8;
+      font-size: 0.78rem;
+      padding: 1.5rem 1rem;
+      margin-top: auto;
+      text-align: center;
+      border-top: 3px solid var(--saffron);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Tricolor Accent Bar -->
+  <div class="tricolor-bar"></div>
+
+  <!-- Accessibility & Language Selection -->
+  <div class="utility-header">
+    <div class="utility-container">
+      <div id="govIndiaText">Government of India | भारत सरकार</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="langSelect" style="font-weight: 600; font-size: 0.78rem;" id="langLabel">Language / भाषा:</label>
+        <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी (Hindi)</option>
+          <option value="te">తెలుగు (Telugu)</option>
+          <option value="ta">தமிழ் (Tamil)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Brand Header -->
+  <header class="gov-header">
+    <div class="header-container">
+      <div class="eci-brand-group">
+        <!-- National Emblem Icon -->
+        <svg class="ashoka-emblem" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="45" stroke="#000080" stroke-width="4"/>
+          <circle cx="50" cy="50" r="8" fill="#000080"/>
+          <path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M18 82 L82 18" stroke="#000080" stroke-width="2"/>
+        </svg>
+        <div class="eci-titles">
+          <h1 id="brandTitleHi">DIGITAL ELECTRONIC VOTING SYSTEM</h1>
+          <h1 id="brandTitleEn">ELECTION COMMISSION OF INDIA</h1>
+          <p id="brandSubtitle">National Portal for Digital Electronic Voting System</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="main-nav">
+    <div class="nav-inner">
+      <ul class="nav-links">
+        <li><button class="nav-btn active" data-view="view-home" id="navHome">Home</button></li>
+        <li><button class="nav-btn" data-view="view-dates" id="navDates">Important Dates</button></li>
+        <li><button class="nav-btn" data-view="view-candidates" id="navCandidates">Candidate List</button></li>
+        <li><button class="nav-btn" data-view="view-how" id="navHow">How It Works</button></li>
+        <!-- Highlighted post-login button -->
+        <li><button class="nav-btn terminal-highlight hidden" data-view="view-terminal" id="navTerminal">EVM Voting Terminal</button></li>
+      </ul>
+
+      <div class="auth-btn-badge">
+        <button id="navLoginBtn" class="btn-login-nav" onclick="navigateTo('view-login')">Voter Login</button>
+        <div id="voterBadge" class="hidden" style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: #fff; font-size: 0.8rem; font-family: monospace;" id="electorIdBadge">EPIC: ACTIVE</span>
+          <button class="btn-logout-nav" id="btnLogout" onclick="handleLogout()">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Body Content Area -->
+  <main class="content-area">
+
+    <!-- ========================================================
+         VIEW 1: HOME PAGE
+         ======================================================== -->
+    <section id="view-home" class="view-panel active">
+      <!-- Hero Banner -->
+      <div class="hero-banner">
+        <h2 id="heroHeading">Next-Gen Blockchain Electronic Voting System</h2>
+        <p id="heroSub">
+          Empowering democratic integrity through cryptographic consensus, zero-tamper ledgers, and voter-verifiable digital confirmations.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-hero-primary" onclick="navigateTo('view-login')" id="btnHeroVote">Verify & Cast Vote Now</button>
+          <button class="btn-hero-secondary" onclick="navigateTo('view-candidates')" id="btnHeroCandidates">Candidate Nominations</button>
+          <button class="btn-hero-secondary" onclick="navigateTo('view-dates')" id="btnHeroSchedule">View Election Schedule</button>
+        </div>
+      </div>
+
+      <!-- Feature Highlights -->
+      <h3 class="section-title" id="homePillarsTitle">Key Pillars of Electoral Integrity</h3>
+      <div class="grid-3">
+        <div class="card">
+          <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
+          <h4 id="pillar1Title">Cryptographic Whitelisting</h4>
+          <p class="text-muted" style="font-size: 0.85rem; margin-top: 4px;" id="pillar1Desc">
+            Separates personal identity from public ledger addresses to guarantee secrecy while verifying authentic eligibility.
+          </p>
+        </div>
+        <div class="card">
+          <div style="font-size: 2rem; margin-bottom: 8px;">📜</div>
+          <h4 id="pillar2Title">Digital Receipt & Audit Trail</h4>
+          <p class="text-muted" style="font-size: 0.85rem; margin-top: 4px;" id="pillar2Desc">
+            Displays a 7-second digital confirmation showing candidate selection along with the immutable blockchain transaction hash.
+          </p>
+        </div>
+        <div class="card">
+          <div style="font-size: 2rem; margin-bottom: 8px;">⚡</div>
+          <h4 id="pillar3Title">Zero Double-Voting Guard</h4>
+          <p class="text-muted" style="font-size: 0.85rem; margin-top: 4px;" id="pillar3Desc">
+            Smart contract consensus automatically rejects any duplicate ballot attempt from a registered address.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 2: ELECTION IMPORTANT DATES
+         ======================================================== -->
+    <section id="view-dates" class="view-panel">
+      <h3 class="section-title" id="datesSectionTitle">General Parliamentary Election Important Dates 2026</h3>
+      <p class="section-subtitle" id="datesSectionSub">
+        Official notifications, scrutiny windows, polling hours, and on-chain vote tabulation dates.
+      </p>
+
+      <div class="table-responsive">
+        <table class="eci-table">
+          <thead>
+            <tr>
+              <th id="thPhase">Electoral Phase</th>
+              <th id="thGazette">Gazette Notification</th>
+              <th id="thLastDate">Last Date for Nominations</th>
+              <th id="thScrutiny">Scrutiny & Withdrawal</th>
+              <th id="thPollDate">Polling Date & Hours</th>
+              <th id="thCountDate">Vote Counting</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge-phase" id="phase1">Phase I</span></td>
+              <td>March 20, 2026</td>
+              <td>March 27, 2026</td>
+              <td>March 30, 2026</td>
+              <td><strong>April 19, 2026</strong> (07:00 - 18:00)</td>
+              <td><strong>June 04, 2026</strong></td>
+            </tr>
+            <tr>
+              <td><span class="badge-phase" id="phase2">Phase II</span></td>
+              <td>March 28, 2026</td>
+              <td>April 04, 2026</td>
+              <td>April 08, 2026</td>
+              <td><strong>April 26, 2026</strong> (07:00 - 18:00)</td>
+              <td><strong>June 04, 2026</strong></td>
+            </tr>
+            <tr>
+              <td><span class="badge-phase" id="phase3">Phase III</span></td>
+              <td>April 12, 2026</td>
+              <td>April 19, 2026</td>
+              <td>April 22, 2026</td>
+              <td><strong>May 07, 2026</strong> (07:00 - 18:00)</td>
+              <td><strong>June 04, 2026</strong></td>
+            </tr>
+            <tr>
+              <td><span class="badge-phase" id="phase4">Phase IV</span></td>
+              <td>April 18, 2026</td>
+              <td>April 25, 2026</td>
+              <td>April 29, 2026</td>
+              <td><strong>May 13, 2026</strong> (07:00 - 18:00)</td>
+              <td><strong>June 04, 2026</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 3: CITY & CONSTITUENCY-WISE CANDIDATE LIST
+         ======================================================== -->
+    <section id="view-candidates" class="view-panel">
+      <h3 class="section-title" id="candSectionTitle">Constituency & City-Wise Contesting Candidates</h3>
+      <p class="section-subtitle" id="candSectionSub">
+        Filter by city/constituency to view candidate affidavits, nominated party names, and electoral symbols.
+      </p>
+
+      <!-- Filter Controls -->
+      <div class="filter-bar">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 4px;" id="filterLabel">
+            Select Parliamentary Constituency / City:
+          </label>
+          <select id="constituencyFilter" class="filter-select" onchange="filterCandidates()">
+            <option value="all" id="optAll">All Constituencies</option>
+            <option value="Hyderabad" id="optHyd">Hyderabad (Telangana)</option>
+            <option value="New Delhi" id="optDel">New Delhi (NCT of Delhi)</option>
+            <option value="Mumbai South" id="optMum">Mumbai South (Maharashtra)</option>
+            <option value="Bengaluru Central" id="optBlr">Bengaluru Central (Karnataka)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Candidate Grid -->
+      <div id="candidateGrid" class="candidate-list-grid">
+        <!-- Populated dynamically via JavaScript with current language -->
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 4: HOW IT WORKS (WORKFLOW)
+         ======================================================== -->
+    <section id="view-how" class="view-panel">
+      <h3 class="section-title" id="howSectionTitle">How Digital Electronic Voting System Works</h3>
+      <p class="section-subtitle" id="howSectionSub">
+        Four simple stages guaranteeing verified eligibility, anonymous ballot submission, and immutable ledger recording.
+      </p>
+
+      <div class="workflow-steps">
+        <div class="step-box">
+          <div class="step-num">1</div>
+          <h4 id="step1Title">Voter Identity Verification</h4>
+          <p id="step1Desc">The elector verifies their National EPIC ID and authenticates with an Aadhaar-linked OTP.</p>
+        </div>
+        <div class="step-box">
+          <div class="step-num">2</div>
+          <h4 id="step2Title">Blockchain Whitelisting</h4>
+          <p id="step2Desc">The smart contract issues eligibility to the voter's public address without storing personal credentials.</p>
+        </div>
+        <div class="step-box">
+          <div class="step-num">3</div>
+          <h4 id="step3Title">EVM Digital Ballot & Confirmation</h4>
+          <p id="step3Desc">Voter presses the blue button; the digital confirmation window presents a 7-second audit slip with candidate and transaction hash.</p>
+        </div>
+        <div class="step-box">
+          <div class="step-num">4</div>
+          <h4 id="step4Title">Block Consensus</h4>
+          <p id="step4Desc">The smart contract increments candidate vote count and permanently marks the voter address as completed.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 5: VOTER LOGIN & AUTHENTICATION
+         ======================================================== -->
+    <section id="view-login" class="view-panel">
+      <div class="login-container">
+        <div class="login-header-strip">
+          <h3 id="loginTitle">Elector Identification Portal</h3>
+          <p style="font-size: 0.8rem; opacity: 0.85;" id="loginSub">Authenticate EPIC ID to unlock the EVM Terminal.</p>
+        </div>
+
+        <div class="login-body">
+          <div id="authStepId">
+            <div class="form-group">
+              <label id="lblEpic">Enter National Voter ID (EPIC Number)</label>
+              <input type="text" id="loginEpicInput" class="form-control" placeholder="e.g. IND-89230491" required />
+            </div>
+            <div class="form-group">
+              <label id="lblAadhaar">Registered Mobile / Aadhaar Last 4 Digits</label>
+              <input type="text" id="loginAadhaarInput" class="form-control" placeholder="XXXX-XXXX-1234" maxlength="14" />
+            </div>
+            <button class="btn-submit" onclick="requestOtp()" id="btnSendOtp">Send 6-Digit OTP</button>
+          </div>
+
+          <div id="authStepOtp" class="hidden">
+            <div class="form-group">
+              <label id="lblOtp">Enter SMS OTP (For Demo: 123456)</label>
+              <input type="text" id="loginOtpInput" class="form-control" placeholder="123456" maxlength="6" style="letter-spacing: 5px; font-weight: 800; text-align: center; font-size: 1.2rem;" />
+            </div>
+            <button class="btn-submit" style="background: var(--india-green);" onclick="verifyAndProceedToTerminal()" id="btnVerifyOtp">Verify & Launch EVM Terminal</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 6: POST-LOGIN EVM & DIGITAL CONFIRMATION TERMINAL
+         ======================================================== -->
+    <section id="view-terminal" class="view-panel">
+      <div style="background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px 16px; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-weight: 700; color: var(--eci-navy); font-size: 0.88rem;" id="termActiveTitle">POLLING TERMINAL ACTIVE</span>
+          <p style="font-size: 0.75rem; color: #4338ca;" id="termActiveSub">Elector Whitelist Confirmed on Smart Contract. You are authorized to cast 1 ballot.</p>
+        </div>
+        <span style="background: #10b981; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;" id="termEligibleBadge">ELIGIBLE</span>
+      </div>
+
+      <!-- EVM & RECEIPT STAGE -->
+      <div class="evm-receipt-stage">
+        
+        <!-- Left: Ballot Unit (BU) -->
+        <div class="ballot-unit">
+          <div class="unit-header">
+            <h3 id="buHeader">BALLOT UNIT (BU-01)</h3>
+            <div class="status-bulb">
+              <span id="readyText">READY</span>
+              <div class="led-bulb"></div>
+            </div>
+          </div>
+
+          <div class="ballot-table">
+            <div class="ballot-row">
+              <div class="col-serial">01</div>
+              <div class="col-name-party">
+                <h4 id="candName1">ARUN SHARMA</h4>
+                <p id="candParty1">National Progressive Alliance (NPA)</p>
+              </div>
+              <div class="col-symbol">🐘</div>
+              <div class="col-led"><span id="led-1" class="vote-led"></span></div>
+              <div class="col-button"><button class="evm-btn" id="btnVote1" onclick="castEvmVote(1, 'ARUN SHARMA', '🐘')">VOTE</button></div>
+            </div>
+
+            <div class="ballot-row">
+              <div class="col-serial">02</div>
+              <div class="col-name-party">
+                <h4>PRIYA NAIR</h4>
+                <p>United Democratic Coalition (UDC)</p>
+              </div>
+              <div class="col-symbol">🌾</div>
+              <div class="col-led"><span id="led-2" class="vote-led"></span></div>
+              <div class="col-button"><button class="evm-btn" id="btnVote2" onclick="castEvmVote(2, 'PRIYA NAIR', '🌾')">VOTE</button></div>
+            </div>
+
+            <div class="ballot-row">
+              <div class="col-serial">03</div>
+              <div class="col-name-party">
+                <h4>RAJESH VERMA</h4>
+                <p>Democratic People's Front (DPF)</p>
+              </div>
+              <div class="col-symbol">☀️</div>
+              <div class="col-led"><span id="led-3" class="vote-led"></span></div>
+              <div class="col-button"><button class="evm-btn" id="btnVote3" onclick="castEvmVote(3, 'RAJESH VERMA', '☀️')">VOTE</button></div>
+            </div>
+
+            <div class="ballot-row">
+              <div class="col-serial">04</div>
+              <div class="col-name-party">
+                <h4>NONE OF THE ABOVE (NOTA)</h4>
+                <p>Rule 49-O Option</p>
+              </div>
+              <div class="col-symbol">❌</div>
+              <div class="col-led"><span id="led-4" class="vote-led"></span></div>
+              <div class="col-button"><button class="evm-btn" id="btnVote4" onclick="castEvmVote(4, 'NOTA', '❌')">VOTE</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Digital Receipt Unit -->
+        <div class="receipt-unit">
+          <div class="unit-header">
+            <h3 id="receiptHeader">DIGITAL RECEIPT UNIT (DRU-09)</h3>
+            <span style="font-size: 0.7rem; color: #cbd5e1;" id="receiptSec">7-SEC WINDOW</span>
+          </div>
+
+          <div class="receipt-window-frame">
+            <span style="position: absolute; top: 6px; font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;" id="receiptAuditWin">DIGITAL AUDIT RECEIPT WINDOW</span>
+
+            <div id="receiptSlip" class="receipt-slip">
+              <div style="text-align: center; font-weight: bold; margin-bottom: 4px;" id="slipGovHeader">
+                ELECTION COMMISSION OF INDIA<br/>
+                <span style="font-size: 0.65rem;">DIGITAL AUDIT RECEIPT</span>
+              </div>
+              <div class="receipt-slip-row">
+                <span id="slipLblSl">SL NO:</span>
+                <strong id="slipSerial">-</strong>
+              </div>
+              <div class="receipt-slip-row">
+                <span id="slipLblCand">CANDIDATE:</span>
+                <strong id="slipCandidate">-</strong>
+              </div>
+              <div class="receipt-slip-row">
+                <span id="slipLblSym">SYMBOL:</span>
+                <span id="slipSymbol" style="font-size: 1.2rem;">-</span>
+              </div>
+              <div style="font-size: 0.65rem; word-break: break-all; color: #475569; margin-top: 6px;">
+                <span id="slipLblTx">BLOCKCHAIN TX:</span><br/>
+                <span id="slipTxHash">0x000000000000...</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="receiptTimerDisplay" class="receipt-timer hidden">
+            <span id="receiptCountdownText">Verification Time:</span> <span id="slipCountdown">7</span>s
+          </div>
+
+          <p style="margin-top: 1rem; background: #fff; padding: 10px; border-radius: 6px; font-size: 0.78rem; color: var(--text-muted); border: 1px solid var(--border);" id="receiptNote">
+            🔒 <strong>Audit Record:</strong> This digital receipt confirms your vote. Once the 7-second timer expires, the ballot is permanently recorded on the blockchain ledger.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Official Footer -->
+  <footer class="eci-footer">
+    <p id="footerMain">© 2026 Digital Electronic Voting System | Election Commission of India</p>
+    <p style="margin-top: 4px; font-size: 0.7rem; opacity: 0.7;" id="footerSub">Final Year Major Project Demonstration • Cryptographic Security & Tamper-Resistant Architecture</p>
+  </footer>
+
+  <!-- ========================================================
+       MULTILINGUAL APPLICATION LOGIC & TRANSLATION ENGINE
+       ======================================================== -->
+  <script>
+    // Multilingual Candidate Database
+    const candidateDataMultilingual = {
+      en: [
+        { id: 1, name: "KAVITA REDDY", party: "People's Voice Party", symbol: "🪷", city: "Hyderabad", education: "B.Tech Computer Science", affidavit: "Clean Record" },
+        { id: 2, name: "MOHAMMED RAFIQ", party: "National Secular Congress", symbol: "🚲", city: "Hyderabad", education: "M.Com", affidavit: "Clean Record" },
+        { id: 3, name: "ARUN SHARMA", party: "National Progressive Alliance", symbol: "🐘", city: "New Delhi", education: "M.A. Economics", affidavit: "Clean Record" },
+        { id: 4, name: "PRIYA NAIR", party: "United Democratic Coalition", symbol: "🌾", city: "New Delhi", education: "LL.B. Law", affidavit: "Clean Record" },
+        { id: 5, name: "DEVENDRA JOSHI", party: "Western Forward Bloc", symbol: "🦁", city: "Mumbai South", education: "Chartered Accountant", affidavit: "Clean Record" },
+        { id: 6, name: "SNEHA DESHMUKH", party: "Labour & Farmers Union", symbol: "🚜", city: "Mumbai South", education: "B.Sc Agriculture", affidavit: "Clean Record" },
+        { id: 7, name: "RAMESH KUMAR", party: "Tech City Alliance", symbol: "⚡", city: "Bengaluru Central", education: "M.S. Software Systems", affidavit: "Clean Record" },
+        { id: 8, name: "ANANYA HEGDE", party: "Citizens Welfare Party", symbol: "🌴", city: "Bengaluru Central", education: "Ph.D. Sociology", affidavit: "Clean Record" }
+      ],
+      te: [
+        { id: 1, name: "కవితా రెడ్డి", party: "పీపుల్స్ వాయిస్ పార్టీ", symbol: "🪷", city: "Hyderabad", education: "బి.టెక్ కంప్యూటర్ సైన్స్", affidavit: "స్వచ్ఛమైన రికార్డు" },
+        { id: 2, name: "మహ్మద్ రఫీక్", party: "నేషనల్ సెక్యులర్ కాంగ్రెస్", symbol: "🚲", city: "Hyderabad", education: "ఎం.కామ్", affidavit: "స్వచ్ఛమైన రికార్డు" },
+        { id: 3, name: "అరుణ్ శర్మ", party: "నేషనల్ ప్రోగ్రెసివ్ అలయన్స్", symbol: "🐘", city: "New Delhi", education: "ఎం.ఏ ఎకనామిక్స్", affidavit: "స్వచ్ఛమైన రికార్డు" },
+        { id: 4, name: "ప్రియా నాయర్", party: "యునైటెడ్ డెమోక్రటిక్ కూటమి", symbol: "🌾", city: "New Delhi", education: "ఎల్.ఎల్.బి న్యాయశాస్త్రం", affidavit: "స్వచ్ఛమైన రికార్డు" },
+        { id: 5, name: "దేవేంద్ర జోషి", party: "వెస్ట్రన్ ఫార్వర్డ్ బ్లాక్", symbol: "🦁", city: "Mumbai South", education: "చార్టర్డ్ అకౌంటెంట్", affidavit: "స్వచ్ఛమైన రికార్డు" },
+        { id: 6, name: "స్నేహ దేశ్‌ముఖ్", party: "కార్మిక & రైతు సంఘం", symbol: "🚜", city: "Mumbai South", education: "బి.ఎస్సీ అగ్రికల్చర్", affidavit: "స్వచ్ఛమైన రికార్డు" },
+        { id: 7, name: "రమేష్ కుమార్", party: "టెక్ సిటీ అలయన్స్", symbol: "⚡", city: "Bengaluru Central", education: "ఎం.ఎస్ సాఫ్ట్‌వేర్", affidavit: "స్వచ్ఛమైన రికార్డు" },
+        { id: 8, name: "అనన్య హెగ్డే", party: "సిటిజన్స్ వెల్ఫేర్ పార్టీ", symbol: "🌴", city: "Bengaluru Central", education: "పి.హెచ్.డి సోషియాలజీ", affidavit: "స్వచ్ఛమైన రికార్డు" }
+      ],
+      hi: [
+        { id: 1, name: "कविता रेड्डी", party: "पीपुल्स वॉयस पार्टी", symbol: "🪷", city: "Hyderabad", education: "बी.टेक कंप्यूटर साइंस", affidavit: "स्वच्छ रिकॉर्ड" },
+        { id: 2, name: "मोहम्मद रफीक", party: "नेशनल सेक्युलर कांग्रेस", symbol: "🚲", city: "Hyderabad", education: "एम.कॉम", affidavit: "स्वच्छ रिकॉर्ड" },
+        { id: 3, name: "अरुण शर्मा", party: "नेशनल प्रोग्रेसिव अलायंस", symbol: "🐘", city: "New Delhi", education: "एम.ए. अर्थशास्त्र", affidavit: "स्वच्छ रिकॉर्ड" },
+        { id: 4, name: "प्रिया नायर", party: "यूनाइटेड डेमोक्रेटिक कोलिशन", symbol: "🌾", city: "New Delhi", education: "एल.एल.बी. कानून", affidavit: "स्वच्छ रिकॉर्ड" },
+        { id: 5, name: "देवेन्द्र जोशी", party: "वेस्टर्न फॉरवर्ड ब्लॉक", symbol: "🦁", city: "Mumbai South", education: "चार्टर्ड एकाउंटेंट", affidavit: "स्वच्छ रिकॉर्ड" },
+        { id: 6, name: "स्नेहा देशमुख", party: "लेबर एंड फार्मर्स यूनियन", symbol: "🚜", city: "Mumbai South", education: "बी.एससी. कृषि", affidavit: "स्वच्छ रिकॉर्ड" },
+        { id: 7, name: "रमेश कुमार", party: "टेक सिटी अलायंस", symbol: "⚡", city: "Bengaluru Central", education: "एम.एस. सॉफ्टवेयर", affidavit: "स्वच्छ रिकॉर्ड" },
+        { id: 8, name: "अनन्या हेगड़े", party: "सिटिजन्स वेलफेयर पार्टी", symbol: "🌴", city: "Bengaluru Central", education: "पीएच.डी. समाजशास्त्र", affidavit: "स्वच्छ रिकॉर्ड" }
+      ],
+      ta: [
+        { id: 1, name: "கவிதா ரெட்டி", party: "மக்கள் குரல் கட்சி", symbol: "🪷", city: "Hyderabad", education: "பி.டெக் கணினி அறிவியல்", affidavit: "குற்றப் பின்னணி இல்லை" },
+        { id: 2, name: "முகமது ரபிக்", party: "தேசிய மதச்சார்பற்ற காங்கிரஸ்", symbol: "🚲", city: "Hyderabad", education: "எம்.காம்", affidavit: "குற்றப் பின்னணி இல்லை" },
+        { id: 3, name: "அருண் சர்மா", party: "தேசிய முற்போக்கு கூட்டணி", symbol: "🐘", city: "New Delhi", education: "எம்.ஏ. பொருளாதாரம்", affidavit: "குற்றப் பின்னணி இல்லை" },
+        { id: 4, name: "பிரியா நாயர்", party: "ஐக்கிய ஜனநாயக கூட்டணி", symbol: "🌾", city: "New Delhi", education: "சட்டம் (LL.B)", affidavit: "குற்றப் பின்னணி இல்லை" },
+        { id: 5, name: "தேவேந்திர ஜோஷி", party: "மேற்கு பார்வர்ட் பிளாக்", symbol: "🦁", city: "Mumbai South", education: "பட்டயக் கணக்காளர்", affidavit: "குற்றப் பின்னணி இல்லை" },
+        { id: 6, name: "சினேகா தேஷ்முக்", party: "தொழிலாளர் மற்றும் விவசாயிகள் சங்கம்", symbol: "🚜", city: "Mumbai South", education: "பி.எஸ்சி வேளாண்மை", affidavit: "குற்றப் பின்னணி இல்லை" },
+        { id: 7, name: "ரமேஷ் குமார்", party: "டெக் சிட்டி கூட்டணி", symbol: "⚡", city: "Bengaluru Central", education: "எம்.எஸ் மென்பொருள்", affidavit: "குற்றப் பின்னணி இல்லை" },
+        { id: 8, name: "அனன்யா ஹெக்டே", party: "குடிமக்கள் நலக் கட்சி", symbol: "🌴", city: "Bengaluru Central", education: "முனைவர் பட்டம் (Ph.D)", affidavit: "குற்றப் பின்னணி இல்லை" }
+      ]
+    };
+
+    // Dictionary with VVPAT completely removed
+    const dict = {
+      en: {
+        gov: "Government of India | भारत सरकार",
+        langLabel: "Language / भाषा:",
+        brandHi: "DIGITAL ELECTRONIC VOTING SYSTEM",
+        brandEn: "ELECTION COMMISSION OF INDIA",
+        brandSub: "National Portal for Digital Electronic Voting System",
+        navHome: "Home",
+        navDates: "Important Dates",
+        navCandidates: "Candidate List",
+        navHow: "How It Works",
+        navTerminal: "EVM Voting Terminal",
+        navLogin: "Voter Login",
+        navLogout: "Logout",
+        heroHead: "Next-Gen Blockchain Electronic Voting System",
+        heroSub: "Empowering democratic integrity through cryptographic consensus, zero-tamper ledgers, and voter-verifiable digital confirmations.",
+        btnHeroVote: "Verify & Cast Vote Now",
+        btnHeroCandidates: "Candidate Nominations",
+        btnHeroSchedule: "View Election Schedule",
+        homePillarsTitle: "Key Pillars of Electoral Integrity",
+        pillar1Title: "Cryptographic Whitelisting",
+        pillar1Desc: "Separates personal identity from public ledger addresses to guarantee secrecy while verifying authentic eligibility.",
+        pillar2Title: "Digital Receipt & Audit Trail",
+        pillar2Desc: "Displays a 7-second digital confirmation showing candidate selection along with the immutable blockchain transaction hash.",
+        pillar3Title: "Zero Double-Voting Guard",
+        pillar3Desc: "Smart contract consensus automatically rejects any duplicate ballot attempt from a registered address.",
+        datesSectionTitle: "General Parliamentary Election Important Dates 2026",
+        datesSectionSub: "Official notifications, scrutiny windows, polling hours, and on-chain vote tabulation dates.",
+        thPhase: "Electoral Phase",
+        thGazette: "Gazette Notification",
+        thLastDate: "Last Date for Nominations",
+        thScrutiny: "Scrutiny & Withdrawal",
+        thPollDate: "Polling Date & Hours",
+        thCountDate: "Vote Counting",
+        phase1: "Phase I", phase2: "Phase II", phase3: "Phase III", phase4: "Phase IV",
+        candSectionTitle: "Constituency & City-Wise Contesting Candidates",
+        candSectionSub: "Filter by city/constituency to view candidate affidavits, nominated party names, and electoral symbols.",
+        filterLabel: "Select Parliamentary Constituency / City:",
+        optAll: "All Constituencies",
+        optHyd: "Hyderabad (Telangana)",
+        optDel: "New Delhi (NCT of Delhi)",
+        optMum: "Mumbai South (Maharashtra)",
+        optBlr: "Bengaluru Central (Karnataka)",
+        lblConstituency: "Constituency:",
+        lblEducation: "Education:",
+        lblAffidavit: "Affidavit:",
+        lblCertified: "Certified by Returning Officer",
+        howSectionTitle: "How Digital Electronic Voting System Works",
+        howSectionSub: "Four simple stages guaranteeing verified eligibility, anonymous ballot submission, and immutable ledger recording.",
+        step1Title: "Voter Identity Verification",
+        step1Desc: "The elector verifies their National EPIC ID and authenticates with an Aadhaar-linked OTP.",
+        step2Title: "Blockchain Whitelisting",
+        step2Desc: "The smart contract issues eligibility to the voter's public address without storing personal credentials.",
+        step3Title: "EVM Digital Ballot & Confirmation",
+        step3Desc: "Voter presses the blue button; the digital confirmation window presents a 7-second audit slip with candidate and transaction hash.",
+        step4Title: "Block Consensus",
+        step4Desc: "The smart contract increments candidate vote count and permanently marks the voter address as completed.",
+        loginTitle: "Elector Identification Portal",
+        loginSub: "Authenticate EPIC ID to unlock the EVM Terminal.",
+        lblEpic: "Enter National Voter ID (EPIC Number)",
+        lblAadhaar: "Registered Mobile / Aadhaar Last 4 Digits",
+        btnSendOtp: "Send 6-Digit OTP",
+        lblOtp: "Enter SMS OTP (For Demo: 123456)",
+        btnVerifyOtp: "Verify & Launch EVM Terminal",
+        termActiveTitle: "POLLING TERMINAL ACTIVE",
+        termActiveSub: "Elector Whitelist Confirmed on Smart Contract. You are authorized to cast 1 ballot.",
+        termEligibleBadge: "ELIGIBLE",
+        buHeader: "BALLOT UNIT (BU-01)",
+        readyText: "READY",
+        btnVote: "VOTE",
+        receiptHeader: "DIGITAL RECEIPT UNIT (DRU-09)",
+        receiptSec: "7-SEC WINDOW",
+        receiptAuditWin: "DIGITAL AUDIT RECEIPT WINDOW",
+        slipGovHeader: "ELECTION COMMISSION OF INDIA<br/><span style='font-size: 0.65rem;'>DIGITAL AUDIT RECEIPT</span>",
+        slipLblSl: "SL NO:",
+        slipLblCand: "CANDIDATE:",
+        slipLblSym: "SYMBOL:",
+        slipLblTx: "BLOCKCHAIN TX:",
+        receiptCountdownText: "Verification Time:",
+        receiptNote: "🔒 <strong>Audit Record:</strong> This digital receipt confirms your vote. Once the 7-second timer expires, the ballot is permanently recorded on the blockchain ledger.",
+        footerMain: "© 2026 Digital Electronic Voting System | Election Commission of India",
+        footerSub: "Final Year Major Project Demonstration • Cryptographic Security & Tamper-Resistant Architecture"
+      },
+      te: {
+        gov: "భారత ప్రభుత్వం | Government of India",
+        langLabel: "భాష / Language:",
+        brandHi: "డిజిటల్ ఎలక్ట్రానిక్ ఓటింగ్ విధానం",
+        brandEn: "ELECTION COMMISSION OF INDIA",
+        brandSub: "డిజిటల్ ఎలక్ట్రానిక్ ఓటింగ్ విధానం జాతీయ పోర్టల్",
+        navHome: "హోమ్",
+        navDates: "ముఖ్యమైన తేదీలు",
+        navCandidates: "అభ్యర్థుల జాబితా",
+        navHow: "ఇది ఎలా పనిచేస్తుంది",
+        navTerminal: "ఈవీఎం ఓటింగ్ టెర్మినల్",
+        navLogin: "ఓటరు లాగిన్",
+        navLogout: "లాగౌట్",
+        heroHead: "తదుపరి తరం బ్లాక్‌చెయిన్ ఎలక్ట్రానిక్ ఓటింగ్ విధానం",
+        heroSub: "ఈవీఎం బ్లాక్‌చెయిన్ సాంకేతికత ద్వారా సురక్షితమైన, పారదర్శకమైన మరియు ధృవీకరించదగిన డిజిటల్ ప్రజాస్వామ్య వ్యవస్థ.",
+        btnHeroVote: "ధృవీకరించి ఓటు వేయండి",
+        btnHeroCandidates: "అభ్యర్థుల నామినేషన్లు",
+        btnHeroSchedule: "ఎన్నికల షెడ్యూల్ చూడండి",
+        homePillarsTitle: "ఎన్నికల సమగ్రత యొక్క ముఖ్య స్తంభాలు",
+        pillar1Title: "క్రిప్టోగ్రాఫిక్ వైట్‌లిస్టింగ్",
+        pillar1Desc: "ఓటరు గుర్తింపును పబ్లిక్ చిరునామా నుండి వేరుచేసి, ఓటరు గోప్యతను కాపాడుతూ అర్హతను ధృవీకరిస్తుంది.",
+        pillar2Title: "డిజిటల్ రసీదు & ఆడిట్ రికార్డు",
+        pillar2Desc: "ఓటు వేసిన తర్వాత 7 సెకన్ల పాటు అభ్యర్థి వివరాలు మరియు బ్లాక్‌చెయిన్ లావాదేవీ హ్యాష్‌తో కూడిన రసీదు కనిపిస్తుంది.",
+        pillar3Title: "డబుల్ ఓటింగ్ నిరోధం",
+        pillar3Desc: "ఒకసారి ఓటు వేసిన చిరునామా నుండి వచ్చే రెండవ లావాదేవీని స్మార్ట్ కాంట్రాక్ట్ ప్రోటోకాల్ వెంటనే తిరస్కరిస్తుంది.",
+        datesSectionTitle: "సార్వత్రిక ఎన్నికల ముఖ్యమైన తేదీలు 2026",
+        datesSectionSub: "గెజిట్ నోటిఫికేషన్లు, నామినేషన్ల పరిశీలన, పోలింగ్ సమయాలు మరియు ఫలితాల తేదీల వివరాలు.",
+        thPhase: "ఎన్నికల దశ",
+        thGazette: "గెజిట్ నోటిఫికేషన్",
+        thLastDate: "నామినేషన్లకు చివరి తేదీ",
+        thScrutiny: "పరిశీలన & ఉపసంహరణ",
+        thPollDate: "పోలింగ్ తేదీ & సమయం",
+        thCountDate: "ఫలితాల లెక్కింపు",
+        phase1: "దశ I", phase2: "దశ II", phase3: "దశ III", phase4: "దశ IV",
+        candSectionTitle: "నియోజకవర్గ & నగరాల వారీగా పోటీ చేసే అభ్యర్థులు",
+        candSectionSub: "అభ్యర్థుల ప్రమాణపత్రాలు, పార్టీ పేర్లు మరియు ఎన్నికల చిహ్నాలను వీక్షించడానికి నియోజకవర్గం వారీగా ఫిల్టర్ చేయండి.",
+        filterLabel: "పార్లమెంటరీ నియోజకవర్గం / నగరాన్ని ఎంచుకోండి:",
+        optAll: "అన్ని నియోజకవర్గాలు",
+        optHyd: "హైదరాబాద్ (తెలంగాణ)",
+        optDel: "న్యూఢిల్లీ (ఢిల్లీ)",
+        optMum: "ముంబై సౌత్ (మహారాష్ట్ర)",
+        optBlr: "బెంగళూరు సెంట్రల్ (కర్ణాటక)",
+        lblConstituency: "నియోజకవర్గం:",
+        lblEducation: "విద్యార్హత:",
+        lblAffidavit: "ప్రమాణపత్రం:",
+        lblCertified: "రిటర్నింగ్ అధికారిచే ధృవీకరించబడింది",
+        howSectionTitle: "డిజిటల్ ఎలక్ట్రానిక్ ఓటింగ్ విధానం ఎలా పనిచేస్తుంది",
+        howSectionSub: "పూర్తి ఓటరు ధృవీకరణ, అనామక ఓటు సమర్పణ మరియు మార్పుచేయలేని శాశ్వత రికార్డింగ్ విధానం.",
+        step1Title: "ఓటరు గుర్తింపు ధృవీకరణ",
+        step1Desc: "ఓటరు తన జాతీయ EPIC గుర్తింపు కార్డుతో లాగిన్ అయ్యి, ఆధార్ అనుసంధాన OTP ద్వారా అర్హతను నిర్ధారిస్తారు.",
+        step2Title: "బ్లాక్‌చెయిన్ వైట్‌లిస్టింగ్",
+        step2Desc: "స్మార్ట్ కాంట్రాక్ట్‌లో ఓటరు వాలెట్ చిరునామాకు మాత్రమే అనుమతి లభిస్తుంది; వ్యక్తిగత వివరాలు బ్లాక్‌చెయిన్‌లో నమోదు కావు.",
+        step3Title: "ఈవీఎం డిజిటల్ బ్యాలెట్ & రసీదు",
+        step3Desc: "ఈవీఎం పై నీలి బటన్ నొక్కగానే ఎంపిక చేసిన అభ్యర్థి వివరాలు మరియు లావాదేవీ హ్యాష్‌తో కూడిన రసీదు 7 సెకన్ల పాటు కనిపిస్తుంది.",
+        step4Title: "శాశ్వత ఏకాభిప్రాయం",
+        step4Desc: "స్మార్ట్ కాంట్రాక్ట్ అభ్యర్థి ఓట్ల సంఖ్యను పెంచి, ఓటరు చిరునామాను ఇప్పటికే ఓటు వేసినట్లుగా బ్లాక్‌లో సీలు చేస్తుంది.",
+        loginTitle: "ఓటరు గుర్తింపు పోర్టల్",
+        loginSub: "ఈవీఎం టెర్మినల్ తెరవడానికి EPIC ఐడీని నమోదు చేయండి.",
+        lblEpic: "జాతీయ ఓటరు ఐడీ (EPIC నంబర్) నమోదు చేయండి",
+        lblAadhaar: "రిజిస్టర్డ్ మొబైల్ / ఆధార్ చివరి 4 అంకెలు",
+        btnSendOtp: "6-అంకెల OTP పంపండి",
+        lblOtp: "SMS OTP నమోదు చేయండి (పరీక్షకు: 123456)",
+        btnVerifyOtp: "ధృవీకరించి ఈవీఎం తెరవండి",
+        termActiveTitle: "పోలింగ్ టెర్మినల్ సక్రియంగా ఉంది",
+        termActiveSub: "స్మార్ట్ కాంట్రాక్ట్‌లో మీ ఓటరు అనుమతి ధృవీకరించబడింది. మీరు 1 ఓటు వేయడానికి అర్హులు.",
+        termEligibleBadge: "అర్హత ఉంది",
+        buHeader: "బ్యాలెట్ యూనిట్ (BU-01)",
+        readyText: "సిద్ధం",
+        btnVote: "ఓటు",
+        receiptHeader: "డిజిటల్ రసీదు యూనిట్ (DRU-09)",
+        receiptSec: "7-సెకన్ల విండో",
+        receiptAuditWin: "డిజిటల్ ఆడిట్ రసీదు విండో",
+        slipGovHeader: "భారత ఎన్నికల సంఘం<br/><span style='font-size: 0.65rem;'>డిజిటల్ ఆడిట్ రసీదు</span>",
+        slipLblSl: "క్రమ సంఖ్య:",
+        slipLblCand: "అభ్యర్థి:",
+        slipLblSym: "గుర్తు:",
+        slipLblTx: "బ్లాక్‌చెయిన్ లావాదేవీ:",
+        receiptCountdownText: "పరిశీలన సమయం:",
+        receiptNote: "🔒 <strong>ఆడిట్ రికార్డు:</strong> ఈ డిజిటల్ రసీదు మీ ఓటును ధృవీకరిస్తుంది. 7 సెకన్ల సమయం ముగిసిన తర్వాత, మీ ఓటు బ్లాక్‌చెయిన్‌లో శాశ్వతంగా నిక్షిప్తమవుతుంది.",
+        footerMain: "© 2026 డిజిటల్ ఎలక్ట్రానిక్ ఓటింగ్ విధానం | భారత ఎన్నికల సంఘం",
+        footerSub: "తుది సంవత్సర ప్రధాన ప్రాజెక్ట్ ప్రదర్శన • క్రిప్టోగ్రాఫిక్ భద్రత & మార్పుచేయలేని నిర్మాణం"
+      },
+      hi: {
+        gov: "भारत सरकार | Government of India",
+        langLabel: "भाषा / Language:",
+        brandHi: "डिजिटल इलेक्ट्रॉनिक वोटिंग सिस्टम",
+        brandEn: "ELECTION COMMISSION OF INDIA",
+        brandSub: "डिजिटल इलेक्ट्रॉनिक वोटिंग सिस्टम राष्ट्रीय पोर्टल",
+        navHome: "मुख्य पृष्ठ",
+        navDates: "महत्वपूर्ण तिथियां",
+        navCandidates: "उम्मीदवार सूची",
+        navHow: "यह कैसे कार्य करता है",
+        navTerminal: "ईवीएम मतदान टर्मिनल",
+        navLogin: "मतदाता लॉगिन",
+        navLogout: "लॉग आउट",
+        heroHead: "अगली पीढ़ी का ब्लॉकचेन इलेक्ट्रॉनिक वोटिंग सिस्टम",
+        heroSub: "ईवीएम ब्लॉकचेन तकनीक के माध्यम से सुरक्षित, पारदर्शी और सत्यापित डिजिटल मतदान प्रणाली।",
+        btnHeroVote: "सत्यापित करें और वोट दें",
+        btnHeroCandidates: "उम्मीदवार नामांकन",
+        btnHeroSchedule: "चुनाव कार्यक्रम देखें",
+        homePillarsTitle: "चुनावी निष्पक्षता के मुख्य स्तंभ",
+        pillar1Title: "क्रिप्टोग्राफ़िक श्वेतसूचीकरण",
+        pillar1Desc: "मतदाता पहचान को सार्वजनिक पते से अलग रखता है ताकि गोपनीयता की रक्षा हो सके।",
+        pillar2Title: "डिजिटल रसीद एवं ऑडिट ट्रेल",
+        pillar2Desc: "वोट डालने के बाद 7 सेकंड तक उम्मीदवार और ब्लॉकचेन ट्रांजेक्शन हैश वाली रसीद दिखती है।",
+        pillar3Title: "दोहरे मतदान पर रोक",
+        pillar3Desc: "एक बार वोट डालने के बाद उसी पते से दोबारा वोट डालने का प्रयास तुरंत खारिज हो जाता है।",
+        datesSectionTitle: "संसदीय आम चुनाव 2026 की महत्वपूर्ण तिथियां",
+        datesSectionSub: "आधिकारिक अधिसूचना, नामांकन जांच, मतदान समय और परिणाम गणना का विवरण।",
+        thPhase: "चुनाव चरण",
+        thGazette: "राजपत्र अधिसूचना",
+        thLastDate: "नामांकन की अंतिम तिथि",
+        thScrutiny: "जांच एवं नाम वापसी",
+        thPollDate: "मतदान की तिथि एवं समय",
+        thCountDate: "मतगणना",
+        phase1: "चरण I", phase2: "चरण II", phase3: "चरण III", phase4: "चरण IV",
+        candSectionTitle: "निर्वाचन क्षेत्र एवं शहरवार चुनाव लड़ने वाले उम्मीदवार",
+        candSectionSub: "उम्मीदवारों के हलफनामे, पार्टी का नाम और चुनाव चिन्ह देखने के लिए शहर चुनें।",
+        filterLabel: "संसदीय निर्वाचन क्षेत्र / शहर चुनें:",
+        optAll: "सभी निर्वाचन क्षेत्र",
+        optHyd: "हैदराबाद (तेलंगाना)",
+        optDel: "नई दिल्ली (दिल्ली)",
+        optMum: "मुंबई दक्षिण (महाराष्ट्र)",
+        optBlr: "बेंगलुरु सेंट्रल (कर्नाटक)",
+        lblConstituency: "निर्वाचन क्षेत्र:",
+        lblEducation: "शिक्षा:",
+        lblAffidavit: "हलफनामा:",
+        lblCertified: "निर्वाचन अधिकारी द्वारा प्रमाणित",
+        howSectionTitle: "डिजिटल इलेक्ट्रॉनिक वोटिंग सिस्टम कैसे काम करता है",
+        howSectionSub: "मतदाता सत्यापन, गोपनीय मतदान और अपरिवर्तनीय ब्लॉकचेन रिकॉर्डिंग की सरल प्रक्रिया।",
+        step1Title: "मतदाता पहचान सत्यापन",
+        step1Desc: "मतदाता अपने राष्ट्रीय ईपीआईसी कार्ड और आधार-लिंक्ड ओटीपी से पात्रता सत्यापित करते हैं।",
+        step2Title: "ब्लॉकचेन श्वेतसूची",
+        step2Desc: "स्मार्ट अनुबंध में केवल अधिकृत वॉलेट पते को वोट की अनुमति मिलती है।",
+        step3Title: "ईवीएम डिजिटल मतपत्र और पुष्टि",
+        step3Desc: "नीला बटन दबाने पर 7 सेकंड के लिए डिजिटल पुष्टि पर्ची प्रदर्शित होती है।",
+        step4Title: "अपरिवर्तनीय सील",
+        step4Desc: "स्मार्ट अनुबंध में वोट हमेशा के लिए ब्लॉकचेन लेज़र पर दर्ज हो जाता है।",
+        loginTitle: "मतदाता पहचान पोर्टल",
+        loginSub: "ईवीएम टर्मिनल खोलने के लिए ईपीआईसी नंबर दर्ज करें।",
+        lblEpic: "राष्ट्रीय मतदाता पहचान पत्र (EPIC) नंबर दर्ज करें",
+        lblAadhaar: "पंजीकृत मोबाइल / आधार के अंतिम 4 अंक",
+        btnSendOtp: "6-अंकों का ओटीपी भेजें",
+        lblOtp: "एसएमएस ओटीपी दर्ज करें (परीक्षण के लिए: 123456)",
+        btnVerifyOtp: "सत्यापित करें और ईवीएम खोलें",
+        termActiveTitle: "मतदान टर्मिनल सक्रिय है",
+        termActiveSub: "स्मार्ट अनुबंध पर मतदाता पात्रता सत्यापित। आप 1 वोट डालने के पात्र हैं।",
+        termEligibleBadge: "पात्र",
+        buHeader: "बैलेट यूनिट (BU-01)",
+        readyText: "तैयार",
+        btnVote: "वोट",
+        receiptHeader: "डिजिटल रसीद यूनिट (DRU-09)",
+        receiptSec: "7-सेकंड विंडो",
+        receiptAuditWin: "डिजिटल ऑडिट रसीद विंडो",
+        slipGovHeader: "भारत निर्वाचन आयोग<br/><span style='font-size: 0.65rem;'>डिजिटल ऑडिट रसीद</span>",
+        slipLblSl: "क्रम संख्या:",
+        slipLblCand: "उम्मीदवार:",
+        slipLblSym: "प्रतीक:",
+        slipLblTx: "ब्लॉकचेन ट्रांजेक्शन:",
+        receiptCountdownText: "सत्यापन समय:",
+        receiptNote: "🔒 <strong>ऑडिट रिकॉर्ड:</strong> यह डिजिटल रसीद आपके वोट की पुष्टि करती है। 7 सेकंड बाद वोट ब्लॉकचेन में दर्ज हो जाता है।",
+        footerMain: "© 2026 डिजिटल इलेक्ट्रॉनिक वोटिंग सिस्टम | भारत निर्वाचन आयोग",
+        footerSub: "अंतिम वर्ष प्रमुख परियोजना प्रदर्शन • क्रिप्टोग्राफिक सुरक्षा और छेड़छाड़-रहित वास्तुकला"
+      },
+      ta: {
+        gov: "இந்திய அரசு | Government of India",
+        langLabel: "மொழி / Language:",
+        brandHi: "டிஜிட்டல் மின்னணு வாக்குப்பதிவு முறை",
+        brandEn: "ELECTION COMMISSION OF INDIA",
+        brandSub: "டிஜிட்டல் மின்னணு வாக்குப்பதிவு முறை தேசிய தளம்",
+        navHome: "முகப்பு",
+        navDates: "முக்கிய தேதிகள்",
+        navCandidates: "வேட்பாளர் பட்டியல்",
+        navHow: "இது எவ்வாறு இயங்குகிறது",
+        navTerminal: "ஈவிஎம் வாக்குப்பதிவு மையம்",
+        navLogin: "வாக்காளர் உள்நுழைவு",
+        navLogout: "வெளியேறு",
+        heroHead: "அடுத்த தலைமுறை பிளாக்செயின் மின்னணு வாக்குப்பதிவு முறை",
+        heroSub: "பாதுகாப்பான மற்றும் வெளிப்படையான முறையில் பிளாக்செயின் தொழில்நுட்பத்தில் ஜனநாயக வாக்குப்பதிவு.",
+        btnHeroVote: "சரிபார்த்து வாக்களிக்கவும்",
+        btnHeroCandidates: "வேட்பாளர் விவரங்கள்",
+        btnHeroSchedule: "தேர்தல் அட்டவணை",
+        homePillarsTitle: "தேர்தல் நேர்மையின் முக்கிய தூண்கள்",
+        pillar1Title: "கிரிப்டோகிராஃபிக் அனுமதி",
+        pillar1Desc: "வாக்காளரின் தனிப்பட்ட அடையாளத்தை பிளாக்செயின் முகவரியிலிருந்து பாதுகாப்பாக பிரிக்கிறது.",
+        pillar2Title: "டிஜிட்டல் ரசீது & தணிக்கை பதிவு",
+        pillar2Desc: "வாக்களித்தவுடன் வேட்பாளர் மற்றும் பிளாக்செயின் கையொப்பத்துடன் 7 வினாடிகள் டிஜிட்டல் ரசீது தோன்றும்.",
+        pillar3Title: "இரட்டை வாக்கு தடுப்பு",
+        pillar3Desc: "ஒரு முறை வாக்களித்த முகவரியிலிருந்து மீண்டும் வாக்களிக்க முடியாது.",
+        datesSectionTitle: "பொதுத் தேர்தல் முக்கிய தேதிகள் 2026",
+        datesSectionSub: "அரசிதழ் அறிவிப்பு, வேட்புமனு பரிசீலனை, வாக்குப்பதிவு நேரம் மற்றும் முடிவுகள் அறிவிப்பு.",
+        thPhase: "தேர்தல் கட்டம்",
+        thGazette: "அரசிதழ் அறிவிப்பு",
+        thLastDate: "வேட்புமனு தாக்கல் கடைசி நாள்",
+        thScrutiny: "பரிசீலனை & திரும்பப் பெறுதல்",
+        thPollDate: "வாக்குப்பதிவு நாள் & நேரம்",
+        thCountDate: "வாக்கு எண்ணிக்கை",
+        phase1: "கட்டம் I", phase2: "கட்டம் II", phase3: "கட்டம் III", phase4: "கட்டம் IV",
+        candSectionTitle: "தொகுதி & நகர வாரியாக போட்டியிடும் வேட்பாளர்கள்",
+        candSectionSub: "வேட்பாளர் பிரமாணப் பத்திரங்கள், கட்சி மற்றும் சின்னங்களைப் பார்க்க நகரத்தைத் தேர்ந்தெடுக்கவும்.",
+        filterLabel: "நாடாளுமன்றத் தொகுதி / நகரத்தைத் தேர்ந்தெடுக்கவும்:",
+        optAll: "அனைத்து தொகுதிகள்",
+        optHyd: "ஹைதராபாத் (தெலுங்கானா)",
+        optDel: "புது டெல்லி (டெல்லி)",
+        optMum: "மும்பை தெற்கு (மகாராஷ்டிரா)",
+        optBlr: "பெங்களூரு மத்திய (கர்நாடகா)",
+        lblConstituency: "தொகுதி:",
+        lblEducation: "கல்வித் தகுதி:",
+        lblAffidavit: "பிரமாணப் பத்திரம்:",
+        lblCertified: "தேர்தல் நடத்தும் அதிகாரியால் சான்றளிக்கப்பட்டது",
+        howSectionTitle: "டிஜிட்டல் மின்னணு வாக்குப்பதிவு முறை எவ்வாறு செயல்படுகிறது",
+        howSectionSub: "வாக்காளர் சரிபார்ப்பு, ரகசிய வாக்குப்பதிவு மற்றும் பாதுகாப்பான பிளாக்செயின் பதிவு முறை.",
+        step1Title: "வாக்காளர் சரிபார்ப்பு",
+        step1Desc: "தேசிய EPIC அட்டை மற்றும் ஆதார் ஓடிபி மூலம் வாக்காளர் தகுதி சரிபார்க்கப்படுகிறது.",
+        step2Title: "பிளாக்செயின் அனுமதி",
+        step2Desc: "வாக்காளரின் முகவரிக்கு மட்டுமே பிளாக்செயினில் வாக்களிக்கும் அனுமதி வழங்கப்படுகிறது.",
+        step3Title: "ஈவிஎம் டிஜிட்டல் வாக்கு & உறுதிப்படுத்தல்",
+        step3Desc: "நீல பொத்தானை அழுத்தியவுடன் டிஜிட்டல் உறுதிப்படுத்தல் சாளரத்தில் 7 வினாடிகள் ஒப்புதல் சீட்டு தோன்றும்.",
+        step4Title: "நிரந்தர பதிவு",
+        step4Desc: "வாக்கு மாற்ற முடியாத வகையில் பிளாக்செயின் லெட்ஜரில் பதிவு செய்யப்படுகிறது.",
+        loginTitle: "வாக்காளர் அடையாள தளம்",
+        loginSub: "ஈவிஎம் மையத்தை அணுக EPIC எண்ணை உள்ளிடவும்.",
+        lblEpic: "வாக்காளர் அடையாள அட்டை (EPIC) எண்ணை உள்ளிடவும்",
+        lblAadhaar: "பதிவு செய்யப்பட்ட மொபைல் / ஆதார் கடைசி 4 இலக்கங்கள்",
+        btnSendOtp: "6-இலக்க OTP அனுப்பவும்",
+        lblOtp: "SMS OTP உள்ளிடவும் (பரிசோதனைக்கு: 123456)",
+        btnVerifyOtp: "சரிபார்த்து ஈவிஎம் திறக்கவும்",
+        termActiveTitle: "வாக்குப்பதிவு மையம் செயல்படுகிறது",
+        termActiveSub: "நீங்கள் 1 வாக்கு செலுத்த தகுதியுடையவர் என சரிபார்க்கப்பட்டது.",
+        termEligibleBadge: "தகுதியுடையவர்",
+        buHeader: "வாக்குப்பதிவு அலகு (BU-01)",
+        readyText: "தயார்",
+        btnVote: "வாக்களி",
+        receiptHeader: "டிஜிட்டல் ரசீது அலகு (DRU-09)",
+        receiptSec: "7-விநாடி சாளரம்",
+        receiptAuditWin: "டிஜிட்டல் தணிக்கை ரசீது சாளரம்",
+        slipGovHeader: "இந்திய தேர்தல் ஆணையம்<br/><span style='font-size: 0.65rem;'>டிஜிட்டல் தணிக்கை ரசீது</span>",
+        slipLblSl: "வரிசை எண்:",
+        slipLblCand: "வேட்பாளர்:",
+        slipLblSym: "சின்னம்:",
+        slipLblTx: "பிளாக்செயின் பரிவர்த்தனை:",
+        receiptCountdownText: "சரிபார்ப்பு நேரம்:",
+        receiptNote: "🔒 <strong>தணிக்கை பதிவு:</strong> இந்த டிஜிட்டல் ரசீது உங்கள் தேர்வை உறுதிப்படுத்துகிறது. 7 விநாடிகளுக்குப் பிறகு வாக்கு பிளாக்செயினில் பதியப்படும்.",
+        footerMain: "© 2026 டிஜிட்டல் மின்னணு வாக்குப்பதிவு முறை | இந்திய தேர்தல் ஆணையம்",
+        footerSub: "இறுதி ஆண்டு திட்ட செயல்விளக்கம் • கிரிப்டோகிராஃபிக் பாதுகாப்பு கட்டமைப்பு"
+      }
+    };
+
+    let currentLang = "en"; // Default set to English
+    let currentElectorEpic = null;
+    let hasCastVote = false;
+
+    // View Navigation Handler
+    function navigateTo(viewId) {
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+
+      const targetBtn = document.querySelector(`[data-view="${viewId}"]`);
+      const targetPanel = document.getElementById(viewId);
+
+      if (targetBtn) targetBtn.classList.add("active");
+      if (targetPanel) targetPanel.classList.add("active");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const view = btn.getAttribute("data-view");
+        navigateTo(view);
+      });
+    });
+
+    // Language Change Function
+    function changeLanguage() {
+      currentLang = document.getElementById("langSelect").value;
+      const t = dict[currentLang] || dict.en;
+
+      // Header & Navigation
+      document.getElementById("govIndiaText").innerText = t.gov;
+      document.getElementById("langLabel").innerText = t.langLabel;
+      document.getElementById("brandTitleHi").innerText = t.brandHi;
+      document.getElementById("brandTitleEn").innerText = t.brandEn;
+      document.getElementById("brandSubtitle").innerText = t.brandSub;
+      document.getElementById("navHome").innerText = t.navHome;
+      document.getElementById("navDates").innerText = t.navDates;
+      document.getElementById("navCandidates").innerText = t.navCandidates;
+      document.getElementById("navHow").innerText = t.navHow;
+      document.getElementById("navTerminal").innerText = t.navTerminal;
+      document.getElementById("navLoginBtn").innerText = t.navLogin;
+      document.getElementById("btnLogout").innerText = t.navLogout;
+
+      // Home Hero
+      document.getElementById("heroHeading").innerText = t.heroHead;
+      document.getElementById("heroSub").innerText = t.heroSub;
+      document.getElementById("btnHeroVote").innerText = t.btnHeroVote;
+      document.getElementById("btnHeroCandidates").innerText = t.btnHeroCandidates;
+      document.getElementById("btnHeroSchedule").innerText = t.btnHeroSchedule;
+
+      // Home Pillars
+      document.getElementById("homePillarsTitle").innerText = t.homePillarsTitle;
+      document.getElementById("pillar1Title").innerText = t.pillar1Title;
+      document.getElementById("pillar1Desc").innerText = t.pillar1Desc;
+      document.getElementById("pillar2Title").innerText = t.pillar2Title;
+      document.getElementById("pillar2Desc").innerText = t.pillar2Desc;
+      document.getElementById("pillar3Title").innerText = t.pillar3Title;
+      document.getElementById("pillar3Desc").innerText = t.pillar3Desc;
+
+      // Important Dates
+      document.getElementById("datesSectionTitle").innerText = t.datesSectionTitle;
+      document.getElementById("datesSectionSub").innerText = t.datesSectionSub;
+      document.getElementById("thPhase").innerText = t.thPhase;
+      document.getElementById("thGazette").innerText = t.thGazette;
+      document.getElementById("thLastDate").innerText = t.thLastDate;
+      document.getElementById("thScrutiny").innerText = t.thScrutiny;
+      document.getElementById("thPollDate").innerText = t.thPollDate;
+      document.getElementById("thCountDate").innerText = t.thCountDate;
+      document.getElementById("phase1").innerText = t.phase1;
+      document.getElementById("phase2").innerText = t.phase2;
+      document.getElementById("phase3").innerText = t.phase3;
+      document.getElementById("phase4").innerText = t.phase4;
+
+      // Candidates Section
+      document.getElementById("candSectionTitle").innerText = t.candSectionTitle;
+      document.getElementById("candSectionSub").innerText = t.candSectionSub;
+      document.getElementById("filterLabel").innerText = t.filterLabel;
+      document.getElementById("optAll").innerText = t.optAll;
+      document.getElementById("optHyd").innerText = t.optHyd;
+      document.getElementById("optDel").innerText = t.optDel;
+      document.getElementById("optMum").innerText = t.optMum;
+      document.getElementById("optBlr").innerText = t.optBlr;
+
+      // How It Works
+      document.getElementById("howSectionTitle").innerText = t.howSectionTitle;
+      document.getElementById("howSectionSub").innerText = t.howSectionSub;
+      document.getElementById("step1Title").innerText = t.step1Title;
+      document.getElementById("step1Desc").innerText = t.step1Desc;
+      document.getElementById("step2Title").innerText = t.step2Title;
+      document.getElementById("step2Desc").innerText = t.step2Desc;
+      document.getElementById("step3Title").innerText = t.step3Title;
+      document.getElementById("step3Desc").innerText = t.step3Desc;
+      document.getElementById("step4Title").innerText = t.step4Title;
+      document.getElementById("step4Desc").innerText = t.step4Desc;
+
+      // Login
+      document.getElementById("loginTitle").innerText = t.loginTitle;
+      document.getElementById("loginSub").innerText = t.loginSub;
+      document.getElementById("lblEpic").innerText = t.lblEpic;
+      document.getElementById("lblAadhaar").innerText = t.lblAadhaar;
+      document.getElementById("btnSendOtp").innerText = t.btnSendOtp;
+      document.getElementById("lblOtp").innerText = t.lblOtp;
+      document.getElementById("btnVerifyOtp").innerText = t.btnVerifyOtp;
+
+      // Terminal
+      document.getElementById("termActiveTitle").innerText = t.termActiveTitle;
+      document.getElementById("termActiveSub").innerText = t.termActiveSub;
+      document.getElementById("termEligibleBadge").innerText = t.termEligibleBadge;
+      document.getElementById("buHeader").innerText = t.buHeader;
+      document.getElementById("readyText").innerText = t.readyText;
+      document.getElementById("btnVote1").innerText = t.btnVote;
+      document.getElementById("btnVote2").innerText = t.btnVote;
+      document.getElementById("btnVote3").innerText = t.btnVote;
+      document.getElementById("btnVote4").innerText = t.btnVote;
+      document.getElementById("receiptHeader").innerText = t.receiptHeader;
+      document.getElementById("receiptSec").innerText = t.receiptSec;
+      document.getElementById("receiptAuditWin").innerText = t.receiptAuditWin;
+      document.getElementById("slipGovHeader").innerHTML = t.slipGovHeader;
+      document.getElementById("slipLblSl").innerText = t.slipLblSl;
+      document.getElementById("slipLblCand").innerText = t.slipLblCand;
+      document.getElementById("slipLblSym").innerText = t.slipLblSym;
+      document.getElementById("slipLblTx").innerText = t.slipLblTx;
+      document.getElementById("receiptCountdownText").innerText = t.receiptCountdownText;
+      document.getElementById("receiptNote").innerHTML = t.receiptNote;
+
+      // Footer
+      document.getElementById("footerMain").innerText = t.footerMain;
+      document.getElementById("footerSub").innerText = t.footerSub;
+
+      // Re-render candidates in new language
+      filterCandidates();
+    }
+
+    // Candidate Filter & Render in Active Language
+    function filterCandidates() {
+      const selectedCity = document.getElementById("constituencyFilter").value;
+      const grid = document.getElementById("candidateGrid");
+      grid.innerHTML = "";
+
+      const t = dict[currentLang] || dict.en;
+      const list = candidateDataMultilingual[currentLang] || candidateDataMultilingual.en;
+
+      const filtered = selectedCity === "all" 
+        ? list 
+        : list.filter(c => c.city === selectedCity);
+
+      filtered.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "candidate-profile-card";
+        card.innerHTML = `
+          <div>
+            <div class="candidate-top">
+              <div class="party-avatar">${c.symbol}</div>
+              <div>
+                <h4 style="font-size: 1.05rem; color: var(--eci-navy); font-weight: 700;">${c.name}</h4>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">${c.party}</p>
+              </div>
+            </div>
+            <div style="font-size: 0.85rem; margin-top: 8px; line-height: 1.6;">
+              <div><strong>${t.lblConstituency}</strong> ${c.city}</div>
+              <div><strong>${t.lblEducation}</strong> ${c.education}</div>
+              <div><strong>${t.lblAffidavit}</strong> <span style="color: #16a34a; font-weight: bold;">${c.affidavit}</span></div>
+            </div>
+          </div>
+          <div style="margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted);">
+            ${t.lblCertified}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Login Flow
+    function requestOtp() {
+      const epic = document.getElementById("loginEpicInput").value.trim();
+      if (!epic) return alert("Please enter EPIC ID");
+
+      currentElectorEpic = epic;
+      document.getElementById("authStepId").classList.add("hidden");
+      document.getElementById("authStepOtp").classList.remove("hidden");
+      alert("Demonstration OTP generated and dispatched! Please enter '123456'.");
+    }
+
+    function verifyAndProceedToTerminal() {
+      const otp = document.getElementById("loginOtpInput").value.trim();
+      if (otp !== "123456") return alert("Invalid OTP. Please enter 123456 for the test environment.");
+
+      // Set logged-in state
+      document.getElementById("navLoginBtn").classList.add("hidden");
+      document.getElementById("voterBadge").classList.remove("hidden");
+      document.getElementById("electorIdBadge").innerText = `EPIC: ${currentElectorEpic.toUpperCase()}`;
+      document.getElementById("navTerminal").classList.remove("hidden");
+
+      alert("Voter Identity Verified & Whitelisted on Smart Contract! Opening EVM Terminal...");
+      navigateTo("view-terminal");
+    }
+
+    function handleLogout() {
+      currentElectorEpic = null;
+      document.getElementById("navLoginBtn").classList.remove("hidden");
+      document.getElementById("voterBadge").classList.add("hidden");
+      document.getElementById("navTerminal").classList.add("hidden");
+      document.getElementById("loginEpicInput").value = "";
+      document.getElementById("loginOtpInput").value = "";
+      document.getElementById("authStepId").classList.remove("hidden");
+      document.getElementById("authStepOtp").classList.add("hidden");
+
+      navigateTo("view-home");
+    }
+
+    // EVM Voting Execution
+    function castEvmVote(candidateId, name, symbol) {
+      if (hasCastVote) {
+        alert("Double Voting Rejected: Our smart contract records indicate your ballot has already been cast.");
+        return;
+      }
+
+      const led = document.getElementById(`led-${candidateId}`);
+      if (led) led.classList.add("glow-red");
+
+      const randomTx = "0x" + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join("");
+
+      document.getElementById("slipSerial").innerText = `0${candidateId}`;
+      document.getElementById("slipCandidate").innerText = name;
+      document.getElementById("slipSymbol").innerText = symbol;
+      document.getElementById("slipTxHash").innerText = randomTx.slice(0, 24) + "...";
+
+      const slip = document.getElementById("receiptSlip");
+      const timerDisplay = document.getElementById("receiptTimerDisplay");
+      slip.classList.add("printed");
+      timerDisplay.classList.remove("hidden");
+
+      let secondsLeft = 7;
+      document.getElementById("slipCountdown").innerText = secondsLeft;
+      const interval = setInterval(() => {
+        secondsLeft--;
+        document.getElementById("slipCountdown").innerText = secondsLeft;
+        if (secondsLeft <= 0) {
+          clearInterval(interval);
+          slip.classList.remove("printed");
+          timerDisplay.classList.add("hidden");
+          if (led) led.classList.remove("glow-red");
+          hasCastVote = true;
+          alert(`Ballot securely recorded! Digital receipt verified and sealed on blockchain.\nTransaction: ${randomTx}`);
+        }
+      }, 1000);
+    }
+
+    // Initial Execution
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("langSelect").value = "en";
+      changeLanguage();
+    });
+  </script>
+</body>
+</html>
