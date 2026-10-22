@@ -1,0 +1,28 @@
+{
+  "name": "blockchain-voting-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Blockchain-Based Digital Voting System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test-backend.js"
+  },
+  "keywords": [
+    "blockchain",
+    "voting",
+    "express",
+    "ethers",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.1"
+  }
+}
